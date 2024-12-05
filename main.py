@@ -38,9 +38,13 @@ food = Tile(10*TILE_SIZE, 10*TILE_SIZE) #food
 snake_body = [] #multiple tile objects
 velocity_x = 0
 velocity_y = 0
+game_over = False
 
 def change_direction(e):
     global velocity_x, velocity_y
+
+    if game_over:
+        return
 
     if (e.keysym == 'Up' and velocity_y != 1):
         velocity_x = 0
@@ -54,17 +58,38 @@ def change_direction(e):
     elif (e.keysym == 'Right' and velocity_x != -1):
         velocity_x = 1
         velocity_y = 0
-    else:
-        print("Use arrow keys to move")
 
 def move():
-    global snake
+    global snake, game_over, food, snake_body
+
+    if game_over:
+        return
+
+    if (snake.x < 0 or snake.x >= WINDOW_WIDTH or snake.y < 0 or snake.y >= WINDOW_HEIGHT):
+        game_over = True
+        return
+
+    for tile in snake_body:
+        if (snake.x == tile.x and snake.y == tile.y):
+            game_over = True
+            return
 
     #collision
     if (snake.x == food.x and snake.y == food.y):
         snake_body.append(Tile(food.x, food.y))
         food.x = random.randint(0, COLS-1) * TILE_SIZE
         food.y = random.randint(0, ROWS-1) * TILE_SIZE
+
+    # update snake body
+    for i in range(len(snake_body)-1, -1, -1):
+        tile = snake_body[i]
+        if (i == 0):
+            tile.x = snake.x
+            tile.y = snake.y
+        else:
+            prev_tile = snake_body[i-1]
+            tile.x = prev_tile.x
+            tile.y = prev_tile.y
 
     snake.x += velocity_x * TILE_SIZE
     snake.y += velocity_y * TILE_SIZE
