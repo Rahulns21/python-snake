@@ -7,6 +7,11 @@ TILE_SIZE = 25
 WINDOW_WIDTH = TILE_SIZE * ROWS
 WINDOW_HEIGHT = TILE_SIZE * COLS
 
+class Tile:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
 #game window
 window = tkinter.Tk()
 window.title("Snake")
@@ -23,5 +28,65 @@ screen_width = window.winfo_screenwidth()
 screen_height = window.winfo_screenheight()
 
 window_x = int((screen_width/2) - (window_width/2))
+window_y = int((screen_height/2) - (window_height/2))
 
+window.geometry(f'{window_width}x{window_height}+{window_x}+{window_y}')
+
+#initialize game
+snake = Tile(5*TILE_SIZE, 5*TILE_SIZE) #single tile, snake's head
+food = Tile(10*TILE_SIZE, 10*TILE_SIZE) #food
+snake_body = [] #multiple tile objects
+velocity_x = 0
+velocity_y = 0
+
+def change_direction(e):
+    global velocity_x, velocity_y
+
+    if (e.keysym == 'Up' and velocity_y != 1):
+        velocity_x = 0
+        velocity_y = -1
+    elif (e.keysym == 'Down' and velocity_y != -1):
+        velocity_x = 0
+        velocity_y = 1
+    elif (e.keysym == 'Left' and velocity_x != 1):
+        velocity_x = -1
+        velocity_y = 0
+    elif (e.keysym == 'Right' and velocity_x != -1):
+        velocity_x = 1
+        velocity_y = 0
+    else:
+        print("Use arrow keys to move")
+
+def move():
+    global snake
+
+    #collision
+    if (snake.x == food.x and snake.y == food.y):
+        snake_body.append(Tile(food.x, food.y))
+        food.x = random.randint(0, COLS-1) * TILE_SIZE
+        food.y = random.randint(0, ROWS-1) * TILE_SIZE
+
+    snake.x += velocity_x * TILE_SIZE
+    snake.y += velocity_y * TILE_SIZE
+
+def draw():
+    global snake
+    move()
+
+    canvas.delete('all')
+
+    #draw food
+    canvas.create_rectangle(food.x, food.y, food.x + TILE_SIZE, food.y + TILE_SIZE, fill='red')
+
+    #draw snake
+    canvas.create_rectangle(snake.x, snake.y, snake.x + TILE_SIZE, snake.y + TILE_SIZE, fill='lime green')
+
+    for tile in snake_body:
+        canvas.create_rectangle(tile.x, tile.y, tile.x + TILE_SIZE, tile.y + TILE_SIZE, fill='lime green')
+
+    window.after(100, draw) #100ms = 1/10 second, 10 frames per second
+
+draw()
+
+window.bind("<KeyRelease>", change_direction)
 window.mainloop()
